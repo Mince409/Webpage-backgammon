@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- 设置字符编码为 UTF-8 -->
+    <meta charset="UTF-8">
+    <!-- 设置视口，使页面在不同设备上自适应 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 设置网页标题 -->
+    <title>五子棋游戏</title>
+    <!-- 引入 Tailwind CSS 框架 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            /* 设置背景图片 */
+            background-image: url('/Video/粉色背景.jpg');
+            /* 背景图片覆盖整个页面 */
+            background-size: cover;
+            /* 背景图片居中显示 */
+            background-position: center;
+            /* 背景图片不重复 */
+            background-repeat: no-repeat;
+            /* 使用 Flexbox 布局，使内容水平和垂直居中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 设置页面高度为视口高度 */
+            height: 100vh;
+            /* 去除页面默认的外边距 */
+            margin: 0;
+            /* 设置 Flex 子元素垂直排列 */
+            flex-direction: column;
+        }
+
+        #board {
+            /* 设置棋盘边框 */
+            border: 1px solid #333;
+            /* 添加阴影效果 */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            /* 设置棋盘边框圆角 */
+            border-radius: 10px;
+            /* 设置棋盘背景图片 */
+            background-image: url('/Video/粉色棋盘.jpg');
+            /* 背景图片覆盖整个棋盘 */
+            background-size: cover;
+        }
+
+        #turn-info {
+            /* 设置当前落子提示信息的位置为绝对定位 */
+            position: absolute;
+            /* 距离页面顶部 20px */
+            top: 5px;
+            /* 水平居中 */
+            left: 50%;
+            transform: translateX(-50%);
+            /* 设置提示信息的背景颜色和透明度 */
+            background-color: rgba(255, 255, 255, 0.8);
+            /* 设置提示信息的内边距 */
+            padding: 10px 20px;
+            /* 设置提示信息的边框圆角 */
+            border-radius: 15px;
+            /* 添加阴影效果 */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            /* 设置提示信息的字体 */
+            font-family: 'Roboto', sans-serif;
+            /* 设置提示信息的字体大小 */
+            font-size: 23px;
+            /* 设置提示信息的字体加粗 */
+            font-weight: bold;
+        }
+
+        .button-container {
+            /* 设置按钮容器与上方元素的外边距 */
+            margin-top: 10px;
+            /* 使用 Flexbox 布局 */
+            display: flex;
+            /* 按钮在容器中均匀分布 */
+            justify-content: space-around;
+            /* 设置按钮容器的宽度 */
+            width: 450px;
+            /* 设置按钮之间的间距 */
+            gap: 25px;
+        }
+
+        .button-container button {
+            /* 设置按钮的背景颜色和透明度 */
+            background-color: rgba(255, 255, 255, 0.8);
+            /* 去除按钮边框 */
+            border: none;
+            /* 设置按钮内边距 */
+            padding: 10px 20px;
+            /* 设置按钮边框圆角，使按钮更圆滑 */
+            border-radius: 20px;
+            /* 添加阴影效果 */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            /* 设置按钮字体 */
+            font-family: 'Roboto', sans-serif;
+            /* 设置按钮字体大小 */
+            font-size: 18px;
+            /* 设置按钮字体加粗 */
+            font-weight: bold;
+            /* 设置鼠标指针样式为手型 */
+            cursor: pointer;
+            /* 设置按钮背景颜色过渡效果 */
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container button:hover {
+            /* 设置按钮鼠标悬停时的背景颜色和透明度 */
+            background-color: rgba(220, 220, 220, 0.8);
+        }
+
+        #undo-button {
+            /* 设置悔棋按钮 */
+            background-color: #ffaa00; /* 背景颜色 */
+			background-image: url('');
+			background-size: cover; /* 字体大小与位置 */
+			color: #000000; /* 字体颜色 */
+        }
+
+        #black-surrender-button {
+            /* 设置黑棋认输按钮的背景颜色 */
+            background-color: #333;
+            /* 设置黑棋认输按钮的字体颜色 */
+            color: white;
+        }
+
+        #white-surrender-button {
+            /* 设置白棋认输按钮的背景颜色 */
+            background-color: white;
+            /* 设置白棋认输按钮的字体颜色 */
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 绘制棋盘的画布 -->
+    <canvas id="board" width="600" height="600"></canvas>
+    <!-- 显示当前落子方的提示信息 -->
+    <div id="turn-info">当前轮到：黑棋</div>
+    <div class="button-container">
+        <!-- 黑棋认输按钮 -->
+        <button id="black-surrender-button">黑棋认输</button>
+        <!-- 悔棋按钮 -->
+        <button id="undo-button">悔棋</button>
+        <!-- 白棋认输按钮 -->
+        <button id="white-surrender-button">白棋认输</button>
+    </div>
+    <script>
+        // 棋盘画布的 ID
+        const CANVAS_ID = 'board';
+        // 棋盘网格大小
+        const GRID_SIZE = 30;
+        // 棋子半径
+        const PIECE_RADIUS = 12;
+        // 棋盘大小（行数和列数）
+        const BOARD_SIZE = 20;
+        // 黑棋玩家标识
+        const PLAYER_BLACK = 1;
+        // 白棋玩家标识
+        const PLAYER_WHITE = 2;
+
+        // 获取棋盘画布元素
+        const canvas = document.getElementById(CANVAS_ID);
+        // 获取 2D 绘图上下文
+        const ctx = canvas.getContext('2d');
+        // 初始化棋盘二维数组，所有位置初始值为 0，表示没有棋子
+        const board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+        // 当前落子方，初始为黑棋
+        let currentPlayer = PLAYER_BLACK;
+        // 获取当前落子提示信息元素
+        const turnInfo = document.getElementById('turn-info');
+        // 获取悔棋按钮元素
+        const undoButton = document.getElementById('undo-button');
+        // 获取黑棋认输按钮元素
+        const blackSurrenderButton = document.getElementById('black-surrender-button');
+        // 获取白棋认输按钮元素
+        const whiteSurrenderButton = document.getElementById('white-surrender-button');
+        // 记录落子历史的数组
+        const moveHistory = [];
+
+        // 绘制棋盘网格
+        function drawBoard() {
+            // 清除画布内容
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 绘制垂直网格线
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                drawLine(i * GRID_SIZE + GRID_SIZE, GRID_SIZE, i * GRID_SIZE + GRID_SIZE, canvas.height - GRID_SIZE);
+            }
+            // 绘制水平网格线
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                drawLine(GRID_SIZE, i * GRID_SIZE + GRID_SIZE, canvas.width - GRID_SIZE, i * GRID_SIZE + GRID_SIZE);
+            }
+        }
+
+        // 绘制一条直线
+        function drawLine(x1, y1, x2, y2) {
+            // 开始绘制路径
+            ctx.beginPath();
+            // 移动画笔到起点
+            ctx.moveTo(x1, y1);
+            // 绘制直线到终点
+            ctx.lineTo(x2, y2);
+            // 设置线条颜色
+            ctx.strokeStyle = '#333';
+            // 设置线条宽度
+            ctx.lineWidth = 1;
+            // 绘制线条
+            ctx.stroke();
+        }
+
+        // 绘制所有棋子
+        function drawPieces() {
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (board[i][j] === PLAYER_BLACK) {
+                        // 绘制黑棋
+                        drawPiece(j * GRID_SIZE + GRID_SIZE, i * GRID_SIZE + GRID_SIZE, 'black');
+                    } else if (board[i][j] === PLAYER_WHITE) {
+                        // 绘制白棋
+                        drawPiece(j * GRID_SIZE + GRID_SIZE, i * GRID_SIZE + GRID_SIZE, 'white');
+                    }
+                }
+            }
+        }
+
+        // 绘制单个棋子
+        function drawPiece(x, y, color) {
+            // 设置填充颜色
+            ctx.fillStyle = color;
+            // 开始绘制圆形路径
+            ctx.beginPath();
+            // 绘制圆形
+            ctx.arc(x, y, PIECE_RADIUS, 0, 2 * Math.PI);
+            // 填充圆形
+            ctx.fill();
+        }
+
+        // 检查是否有玩家获胜
+        function checkWin(x, y, player) {
+            // 定义四个方向（水平、垂直、正斜、反斜）
+            const directions = [
+                [[1, 0], [-1, 0]],
+                [[0, 1], [0, -1]],
+                [[1, 1], [-1, -1]],
+                [[1, -1], [-1, 1]]
+            ];
+            // 遍历四个方向
+            for (const dir of directions) {
+                let count = 1;
+                // 遍历每个方向的两个子方向
+                for (const [dx, dy] of dir) {
+                    let newX = x + dx;
+                    let newY = y + dy;
+                    // 检查该方向上连续相同棋子的数量
+                    while (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE && board[newX][newY] === player) {
+                        count++;
+                        newX += dx;
+                        newY += dy;
+                    }
+                }
+                // 如果连续相同棋子数量达到 5 个，则判定该玩家获胜
+                if (count >= 5) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 为画布添加点击事件监听器
+        canvas.addEventListener('click', function (e) {
+            // 获取画布相对于浏览器窗口的位置
+            const rect = canvas.getBoundingClientRect();
+            // 计算点击位置对应的棋盘坐标
+            const x = Math.round((e.clientX - rect.left - GRID_SIZE) / GRID_SIZE);
+            const y = Math.round((e.clientY - rect.top - GRID_SIZE) / GRID_SIZE);
+            // 检查点击位置是否合法（在棋盘内且该位置没有棋子）
+            if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && board[y][x] === 0) {
+                // 在该位置落子
+                board[y][x] = currentPlayer;
+                // 记录落子历史
+                moveHistory.push({ x, y, player: currentPlayer });
+                // 重新绘制所有棋子
+                drawPieces();
+                // 检查是否有玩家获胜
+                if (checkWin(y, x, currentPlayer)) {
+                    // 弹出获胜提示框
+                    alert(`${currentPlayer === PLAYER_BLACK ? '黑棋方' : '白棋方'} 获胜！`);
+                    // 初始化游戏
+                    initGame();
+                } else {
+                    // 切换落子方
+                    currentPlayer = currentPlayer === PLAYER_BLACK ? PLAYER_WHITE : PLAYER_BLACK;
+                    // 更新当前落子提示信息
+                    turnInfo.textContent = `当前轮到：${currentPlayer === PLAYER_BLACK ? '黑棋方' : '白棋方'}`;
+                }
+            }
+        });
+
+        // 为悔棋按钮添加点击事件监听器
+        undoButton.addEventListener('click', function () {
+            // 检查是否有落子历史
+            if (moveHistory.length > 0) {
+                // 取出最后一次落子信息
+                const lastMove = moveHistory.pop();
+                // 将该位置的棋子移除
+                board[lastMove.y][lastMove.x] = 0;
+                // 切换落子方
+                currentPlayer = currentPlayer === PLAYER_BLACK ? PLAYER_WHITE : PLAYER_BLACK;
+                // 更新当前落子提示信息
+                turnInfo.textContent = `当前轮到：${currentPlayer === PLAYER_BLACK ? '黑棋' : '白棋'}`;
+                // 重新绘制棋盘网格
+                drawBoard();
+                // 重新绘制所有棋子
+                drawPieces();
+            }
+        });
+
+        // 为黑棋认输按钮添加点击事件监听器
+        blackSurrenderButton.addEventListener('click', function () {
+            // 弹出黑棋认输提示框
+            alert('黑棋认输，白棋获胜！');
+            // 初始化游戏
+            initGame();
+        });
+
+        // 为白棋认输按钮添加点击事件监听器
+        whiteSurrenderButton.addEventListener('click', function () {
+            // 弹出白棋认输提示框
+            alert('白棋认输，黑棋获胜！');
+            // 初始化游戏
+            initGame();
+        });
+
+        // 初始化游戏
+        function initGame() {
+            // 清空棋盘
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    board[i][j] = 0;
+                }
+            }
+            // 初始落子方为黑棋
+            currentPlayer = PLAYER_BLACK;
+            // 更新当前落子提示信息
+            turnInfo.textContent = '当前轮到：黑棋';
+            // 清空落子历史
+            moveHistory.length = 0;
+            // 重新绘制棋盘网格
+            drawBoard();
+            // 重新绘制所有棋子
+            drawPieces();
+        }
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+
+</html>
+    
